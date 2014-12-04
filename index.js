@@ -3,8 +3,8 @@
  * @name drum_tests
  */
 
-var bass_drum_harmonics = [1.0, 2.36, 1.72, 1.86, 2.72, 3.64, 4.5, 5.46];
-var snare_drum_harmonics = [1.0, 1.6, 2.13, 2.66, 2.3, 2.92, 3.5, 4.07, 3.6, 4.24, 4.84];
+var bass_drum_harmonics = [1.0, 2.36, 1.72, 1.86, 2.72, 3.64]; // 4.5, 5.46
+var snare_drum_harmonics = [1.0, 1.6, 2.13, 2.66, 2.3, 2.92, 3.5, 4.07]; // 4.24, 4.84
 
 var bassdrum = Bassdrum(80, 30, 1);
 
@@ -14,11 +14,9 @@ var snare = Snaredrum(220, 20, 0.2, 0.4);
 var snare2 = Snaredrum(440, 50, 0.01, 0.02);
 var snare3 = Snaredrum(440, 50, 0.01, 0.02);
 
-var tom1 = Tomdrum(330, 25, 0.2);
-var tom2 = Tomdrum(220, 30, 0.2);
-var tom3 = Tomdrum(110, 35, 0.2);
-
-var click = NoiseMaker(0, 200, 0.3);
+var tom1 = Tomdrum(110, 15, 0.8);
+var tom2 = Tomdrum(110*3/2, 17, 0.8);
+var tom3 = Tomdrum(110*2, 20, 0.8);
 
 var drums = {
   play : function(){
@@ -26,7 +24,6 @@ var drums = {
     var bassdrumplay = bassdrum.play();
     var snareplay = snare.play();
     var hihatplay = hihat.play();
-    var clickplay = click.play();
     
     var tom1play = tom1.play();
     var tom2play = tom2.play();
@@ -36,8 +33,8 @@ var drums = {
     var snare3play = snare3.play();
     
     return [
-      bassdrumplay * 0.5 + hihatplay * 0.6 + snareplay * 0.4 + clickplay * 1.0 + snare2play*0.5 + tom1play*0.8 + tom2play*0.5 + tom3play*0.2, 
-      bassdrumplay * 0.5 + hihatplay * 0.4 + snareplay * 0.6 + clickplay * 0.0 + snare3play*0.5 + tom1play*0.2 + tom2play*0.5 + tom3play*0.8];
+      bassdrumplay * 0.5 + hihatplay * 0.6 + snareplay * 0.4 + snare2play*0.5 + tom1play*0.8 + tom2play*0.5 + tom3play*0.2, 
+      bassdrumplay * 0.5 + hihatplay * 0.4 + snareplay * 0.6 + snare3play*0.5 + tom1play*0.2 + tom2play*0.5 + tom3play*0.8];
   }
 };
 
@@ -74,7 +71,6 @@ export function dsp(t) {
   if (each(beats,0,1)) hihat.hit(1);
   if (each(beats,0.5,1)) hihat.hit(0.2);
   
-  if (each(beats,0,2)) click.hit(1);
   if (each(beats,0,0.5)) snare2.hit(1);
   if (each(beats,0,0.5)) snare3.hit(1);
   
@@ -88,6 +84,8 @@ export function dsp(t) {
     
     if (each(beats,2,4)) snare.hit(1);
     
+    if (each(beats,7,8)) tom2.hit(1);
+    
     
     if (each(beats,1.5,4) && Math.random() > 0.8) bassdrum.hit(0.6);
     
@@ -98,7 +96,7 @@ export function dsp(t) {
   
   
   
-  if (each(beats,0,16)) fill_switch = 1;//(fill_switch+1)%8;//Math.floor(Math.random()*8);
+  if (each(beats,0,16)) fill_switch = (fill_switch+1)%8;//Math.floor(Math.random()*8);
   
   
   switch (fill_switch){
@@ -116,14 +114,21 @@ export function dsp(t) {
       
     case 1:
       
-      if (each(beats,12,16)) bassdrum.hit(1);
-      if (each(beats,12+1,16)) bassdrum.hit(1);
+      if (each(beats,12+0,16)) tom3.hit(1);
+      if (each(beats,12+0+1/2,16)) tom3.hit(0.6);
       
-      if (each(beats,12+2.5,16)) snare.hit(1);
+      if (each(beats,12+1,16)) tom3.hit(1);
+      if (each(beats,12+1+1/3,16)) tom3.hit(0.6);
+      if (each(beats,12+1+2/3,16)) tom3.hit(0.5);
       
-      if (each(beats,12+3,16)) snare.hit(0.8);
+      if (each(beats,12+2,16)) tom2.hit(1);
+      if (each(beats,12+2+1/3,16)) tom2.hit(0.6);
+      if (each(beats,12+2+2/3,16)) tom2.hit(0.5);
       
-      if (each(beats,12+3.5,16)) snare.hit(0.3);
+      if (each(beats,12+3,16)) tom1.hit(1);
+      if (each(beats,12+3+1/3,16)) tom1.hit(0.6);
+      if (each(beats,12+3+2/3,16)) tom1.hit(0.5);
+      
       break;
       
     case 2:
@@ -149,8 +154,8 @@ export function dsp(t) {
       
       if (each(beats,12+0.5,16)) snare.hit(1);
       
-      if (each(beats,12+11,16)) bassdrum.hit(0.8);
-      if (each(beats,12+1.5,16)) bassdrum.hit(1);
+      if (each(beats,12+1,16)) tom2.hit(0.8);
+      if (each(beats,12+1.5,16)) tom2.hit(1);
       
       if (each(beats,12+1,16)) snare.hit(1);
       
@@ -221,19 +226,25 @@ export function dsp(t) {
     
     case 7:
       
-      
-      if (each(beats,12+0,16)) bassdrum.hit(1);
-      if (each(beats,12+1,16)) bassdrum.hit(1);
+      if (each(beats,12+0,16)) bassdrum.hit(0.7);
+      if (each(beats,12+1,16)) bassdrum.hit(0.8);
       if (each(beats,12+2,16)) bassdrum.hit(1);
-      if (each(beats,12+2.5,16)) bassdrum.hit(1);
-      if (each(beats,12+3,16)) bassdrum.hit(1);
-      if (each(beats,12+3.5,16)) bassdrum.hit(1);
       
-      if (each(beats,12+0.5,16)) snare.hit(0.6);
-      if (each(beats,12+1.5,16)) snare.hit(0.7);
+      if (each(beats,12+0.5,16)) snare.hit(0.2);
+      if (each(beats,12+0.75,16)) snare.hit(0.1);
+      if (each(beats,12+1,16)) snare.hit(0.3);
+      if (each(beats,12+1.25,16)) snare.hit(0.2);
+      if (each(beats,12+1.5,16)) snare.hit(0.5);
+      if (each(beats,12+1.75,16)) snare.hit(0.2);
+      if (each(beats,12+2,16)) tom2.hit(0.6);
+      if (each(beats,12+2.25,16)) tom2.hit(0.6);
+      if (each(beats,12+2.5,16)) tom2.hit(0.8);
+      if (each(beats,12+2.75,16)) tom2.hit(1);
       
-      
-      if (each(beats,12+3.5,16)) snare.hit(0.7);
+      if (each(beats,12+3,16)) tom1.hit(1);
+      if (each(beats,12+3.25,16)) tom1.hit(1);
+      if (each(beats,12+3.5,16)) tom1.hit(1);
+      if (each(beats,12+3.75,16)) tom1.hit(1);
     
   }
   
@@ -266,6 +277,11 @@ function NoiseMaker(color, decay, base_amp){
     set_color: function(c){color = c;},
     set_decay: function(d){decay = d;},
     play : function(){
+      if (v*base_amp < 0.001) {
+        v = 0;
+        return 0;
+      }
+      
       v *= (1 - decay/sampleRate);
       
       w *= color;
@@ -277,7 +293,7 @@ function NoiseMaker(color, decay, base_amp){
 }
 
 
-function Drumhead(freq, harmonics, decay, freq_decay, base_amp){
+function Drumhead(freq, harmonics, harmonic_power, decay, freq_decay, base_amp){
   
   var w = 0;
   var v = 0;
@@ -293,13 +309,18 @@ function Drumhead(freq, harmonics, decay, freq_decay, base_amp){
     hit : function (vel) {
       t = 0;
       f = freq;
-      v = vel*base_amp*(0.8 + 0.4*Math.random());
+      v = vel*base_amp;
       
     },
     play : function(){
       
+      if (v * f < 0.001){
+        v = 0;
+        return 0;
+      }
+      
       for (var i in harmonics){
-        w += Math.pow(-1,i) * v * Math.cos(2 * Math.PI * f * harmonics[i] * t) / Math.pow(harmonics[i],1) *(2*Math.PI*f)/sampleRate;
+        w += Math.pow(-1,i) * v * Math.cos(2 * Math.PI * f * harmonics[i] * t) / Math.pow(harmonics[i],harmonic_power+1) *(2*Math.PI*f)/sampleRate;
       }
       
       w *= (1 - decay/sampleRate);
@@ -319,7 +340,7 @@ function Bassdrum(freq, decay, base_amp){
   var freq_decay = 5;
   var tap_decay = 5*decay;
   
-  var drumhead = Drumhead(freq, bass_drum_harmonics, decay, freq_decay, base_amp);
+  var drumhead = Drumhead(freq, bass_drum_harmonics, 0, decay, freq_decay, base_amp);
   var drumnoise = NoiseMaker(0, tap_decay, base_amp/12);
   
   return{
@@ -344,7 +365,7 @@ function Bassdrum(freq, decay, base_amp){
 
 function Snaredrum(freq, decay, noise_amp, drumhead_amp){
   
-  var drumhead = Drumhead(freq, snare_drum_harmonics, decay, 0, drumhead_amp);
+  var drumhead = Drumhead(freq, snare_drum_harmonics, 0, decay, 0, drumhead_amp);
   var drumnoise = NoiseMaker(0.9, decay, noise_amp);
   
   
@@ -368,19 +389,5 @@ function Snaredrum(freq, decay, noise_amp, drumhead_amp){
 
 function Tomdrum(freq, decay, base_amp){
   
-  var drumhead = Drumhead(freq, snare_drum_harmonics, decay, 0, base_amp);
-  
-  return{
-    
-    drumhead : drumhead,
-    
-    hit : function(v){
-      this.drumhead.hit(v);
-    },
-    
-    play : function(){
-      return this.drumhead.play();
-    }
-    
-  };
+  return Drumhead(freq, snare_drum_harmonics, -0.5, decay, 0.05, base_amp);
 }
