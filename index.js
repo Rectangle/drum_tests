@@ -14,6 +14,10 @@ var snare = Snaredrum(220, 20, 0.2, 0.4);
 var snare2 = Snaredrum(440, 50, 0.01, 0.02);
 var snare3 = Snaredrum(440, 50, 0.01, 0.02);
 
+var tom1 = Tomdrum(330, 25, 0.2);
+var tom2 = Tomdrum(220, 30, 0.2);
+var tom3 = Tomdrum(110, 35, 0.2);
+
 var click = NoiseMaker(0, 200, 0.3);
 
 var drums = {
@@ -24,12 +28,16 @@ var drums = {
     var hihatplay = hihat.play();
     var clickplay = click.play();
     
+    var tom1play = tom1.play();
+    var tom2play = tom2.play();
+    var tom3play = tom3.play();
+    
     var snare2play = snare2.play();
     var snare3play = snare3.play();
     
     return [
-      bassdrumplay * 0.5 + hihatplay * 0.6 + snareplay * 0.3 + clickplay * 1.0 + snare2play*0.5, 
-      bassdrumplay * 0.5 + hihatplay * 0.4 + snareplay * 0.7 + clickplay * 0.0 + snare3play*0.5 ];
+      bassdrumplay * 0.5 + hihatplay * 0.6 + snareplay * 0.4 + clickplay * 1.0 + snare2play*0.5 + tom1play*0.8 + tom2play*0.5 + tom3play*0.2, 
+      bassdrumplay * 0.5 + hihatplay * 0.4 + snareplay * 0.6 + clickplay * 0.0 + snare3play*0.5 + tom1play*0.2 + tom2play*0.5 + tom3play*0.8];
   }
 };
 
@@ -90,7 +98,7 @@ export function dsp(t) {
   
   
   
-  if (each(beats,0,16)) fill_switch = (fill_switch+1)%8;//Math.floor(Math.random()*8);
+  if (each(beats,0,16)) fill_switch = 1;//(fill_switch+1)%8;//Math.floor(Math.random()*8);
   
   
   switch (fill_switch){
@@ -356,4 +364,23 @@ function Snaredrum(freq, decay, noise_amp, drumhead_amp){
     
   };
   
+}
+
+function Tomdrum(freq, decay, base_amp){
+  
+  var drumhead = Drumhead(freq, snare_drum_harmonics, decay, 0, base_amp);
+  
+  return{
+    
+    drumhead : drumhead,
+    
+    hit : function(v){
+      this.drumhead.hit(v);
+    },
+    
+    play : function(){
+      return this.drumhead.play();
+    }
+    
+  };
 }
