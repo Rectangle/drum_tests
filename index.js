@@ -3,20 +3,55 @@
  * @name drum_tests
  */
 
-var harmonics = [1.0, 1.6, 2.13, 2.66, 2.3, 2.92, 3.5, 4.07, 3.6, 4.24, 4.84, 5.42, 4.91, 5.55, 6.16, 6.76, 6.23, 6.86, 7.5, 8.08, 7.53, 8.17];
+var bass_drum_harmonics = [1.0, 2.36, 1.72, 1.86, 2.72, 3.64, 4.5, 5.46];
+var snare_drum_harmonics = [1.0, 1.6, 2.13, 2.66, 2.3, 2.92, 3.5, 4.07, 3.6, 4.24, 4.84];
 
-var freq = 110;
+var bassdrum = Bassdrum(80, 30, 1);
 
-var bass_drum = new Drumhead(freq, harmonics, 10, 0, 2);
-var bass_drum2 = new Drumhead(55*3/2, harmonics, 10, 0, 2);
-var hihat = NoiseMaker(0.0, 30, 0);
-var snare = NoiseMaker(0.8, 18, 0);
+var hihat = NoiseMaker(0, 30, 0.1);
 
-var m = 1;
+var snare = Snaredrum(220, 20, 0.2, 0.4);
+var snare2 = Snaredrum(440, 50, 0.01, 0.02);
+var snare3 = Snaredrum(440, 50, 0.01, 0.02);
 
-function at(t1,t2){return (t1 >= t2 && t1 <= t2+2/sampleRate);}
+var click = NoiseMaker(0, 200, 0.3);
+
+var drums = {
+  play : function(){
+    
+    var bassdrumplay = bassdrum.play();
+    var snareplay = snare.play();
+    var hihatplay = hihat.play();
+    var clickplay = click.play();
+    
+    var snare2play = snare2.play();
+    var snare3play = snare3.play();
+    
+    return [
+      bassdrumplay * 0.5 + hihatplay * 0.6 + snareplay * 0.3 + clickplay * 1.0 + snare2play*0.5, 
+      bassdrumplay * 0.5 + hihatplay * 0.4 + snareplay * 0.7 + clickplay * 0.0 + snare3play*0.5 ];
+  }
+};
+
+var bpm = 240;
+
+function at(t1,t2){return (t1 >= t2 && t1 <= t2+1/sampleRate);}
+
+function each(b, beat, per_beat){
+  return at(b%per_beat*60/bpm, beat%per_beat*60/bpm);
+}
+
+var beats = 0.0;
+
+var tally = 0;
+
+var fill_switch = 0;
+
 
 export function dsp(t) {
+  
+  beats += 1/sampleRate/60*bpm;
+  
   
   /*
   var w = 0;
@@ -27,42 +62,189 @@ export function dsp(t) {
   }
   */
   
-  if (at(t%(2*m), 0)) bass_drum.hit(0.1);
-  if (at(t%(2*m), m*1/16)) bass_drum.hit(0.15);
-  if (at(t%(2*m), m*2/16)) bass_drum.hit(0.15);
-  if (at(t%(2*m), m*3/16)) bass_drum.hit(0.2);
-  if (at(t%(2*m), m*4/16)) bass_drum.hit(0.25);
-  if (at(t%(2*m), m*5/16)) bass_drum.hit(0.25);
-  if (at(t%(2*m), m*6/16)) bass_drum.hit(0.5);
-  if (at(t%(2*m), m*7/16)) bass_drum.hit(0.5);
-  if (at(t%(2*m), m*8/16)) bass_drum.hit(1);
   
-  if (at(t%(2*m), m*3/4)) bass_drum2.hit(1);
+  if (each(beats,0,1)) hihat.hit(1);
+  if (each(beats,0.5,1)) hihat.hit(0.2);
   
-  if (at(t%(2*m), m*1)) bass_drum.hit(1);
-  
-  if (at(t%(2*m), m*5/4)) bass_drum2.hit(1);
-  
-  //if (at(t%m, m*0.5)) bass_drum2.hit(1);
-  
-  if (at(t%(m/4), 0)) hihat.hit(1);
-  if (at(t%m, m/2)) snare.hit(1);
+  if (each(beats,0,2)) click.hit(1);
+  if (each(beats,0,0.5)) snare2.hit(1);
+  if (each(beats,0,0.5)) snare3.hit(1);
   
   
   
-  if (at(t%(8*m), m*(3+9/16))) snare.hit(0.5 + 0.5 * Math.random());
-  if (at(t%(4*m), m*(3+10/16))) snare.hit(0.5 + 0.5 * Math.random());
-  if (at(t%(8*m), m*(3+11/16))) snare.hit(0.5 + 0.5 * Math.random());
-  if (at(t%(4*m), m*(3+12/16))) snare.hit(0.5 + 0.5 * Math.random());
-  if (at(t%(8*m), m*(3+13/16))) snare.hit(0.5 + 0.5 * Math.random());
-  if (at(t%(4*m), m*(3+14/16))) snare.hit(0.5 + 0.5 * Math.random());
-  if (at(t%(8*m), m*(3+15/16))) snare.hit(0.5 + 0.5 * Math.random());
+  if (beats%16 < 12){
   
-  return compress(bass_drum.play() + bass_drum2.play() + hihat.play() + snare.play());
+    if (each(beats,0,4)) bassdrum.hit(1);
+    if (each(beats,1,4)) bassdrum.hit(1);
+    
+    
+    if (each(beats,2,4)) snare.hit(1);
+    
+    
+    if (each(beats,1.5,4) && Math.random() > 0.8) bassdrum.hit(0.6);
+    
+    if (each(beats,0.75,4) && Math.random() > 0.8) hihat.hit(0.5);
+    
+  }
+  
+  
+  
+  
+  if (each(beats,0,16)) fill_switch = (fill_switch+1)%8;//Math.floor(Math.random()*8);
+  
+  
+  switch (fill_switch){
+    
+    case 0:
+      
+      if (each(beats,12,16)) bassdrum.hit(1);
+      if (each(beats,12+1,16)) bassdrum.hit(1);
+      
+      if (each(beats,12+1.5,16)) snare.hit(0.5);
+      if (each(beats,12+2,16)) snare.hit(1);
+      if (each(beats,12+3,16)) snare.hit(0.8);
+      if (each(beats,12+3.5,16)) snare.hit(0.4);
+      break;
+      
+    case 1:
+      
+      if (each(beats,12,16)) bassdrum.hit(1);
+      if (each(beats,12+1,16)) bassdrum.hit(1);
+      
+      if (each(beats,12+2.5,16)) snare.hit(1);
+      
+      if (each(beats,12+3,16)) snare.hit(0.8);
+      
+      if (each(beats,12+3.5,16)) snare.hit(0.3);
+      break;
+      
+    case 2:
+      
+      if (each(beats,12,16)) bassdrum.hit(1);
+      if (each(beats,12+0.5,16)) snare.hit(0.5);
+      if (each(beats,12+1,16)) bassdrum.hit(1);
+      
+      if (each(beats,12+1.5,16)) snare.hit(0.8);
+      
+      if (each(beats,12+2,16)) snare.hit(1);
+      
+      
+      if (each(beats,12+3,16)) bassdrum.hit(1);
+      
+      if (each(beats,12+3,16)) snare.hit(0.8);
+      
+      if (each(beats,12+3.5,16)) snare.hit(0.3);
+      
+      break;
+      
+    case 3:
+      
+      if (each(beats,12+0.5,16)) snare.hit(1);
+      
+      if (each(beats,12+11,16)) bassdrum.hit(0.8);
+      if (each(beats,12+1.5,16)) bassdrum.hit(1);
+      
+      if (each(beats,12+1,16)) snare.hit(1);
+      
+      if (each(beats,12+2,16)) bassdrum.hit(1);
+      if (each(beats,12+2.5,16)) snare.hit(1);
+      if (each(beats,12+3,16)) snare.hit(0.6);
+      if (each(beats,12+3.5,16)) snare.hit(0.5);
+      
+      
+      break;
+      
+    case 4:
+      if (each(beats,12+0,16)) bassdrum.hit(0.7);
+      if (each(beats,12+1,16)) bassdrum.hit(0.8);
+      if (each(beats,12+2,16)) bassdrum.hit(1);
+      
+      if (each(beats,12+0.5,16)) snare.hit(0.2);
+      if (each(beats,12+0.75,16)) snare.hit(0.1);
+      if (each(beats,12+1,16)) snare.hit(0.3);
+      if (each(beats,12+1.25,16)) snare.hit(0.2);
+      if (each(beats,12+1.5,16)) snare.hit(0.5);
+      if (each(beats,12+1.75,16)) snare.hit(0.2);
+      if (each(beats,12+2,16)) snare.hit(0.6);
+      if (each(beats,12+2.25,16)) snare.hit(0.6);
+      if (each(beats,12+2.5,16)) snare.hit(0.8);
+      if (each(beats,12+2.75,16)) snare.hit(1);
+      
+      if (each(beats,12+3,16)) snare.hit(1);
+      if (each(beats,12+3.5,16)) snare.hit(1);
+      
+      break;
+      
+    case 5:
+      
+      if (each(beats,12,16)) bassdrum.hit(1);
+      if (each(beats,12+1,16)) bassdrum.hit(1);
+      
+      if (each(beats,12+2,16)) snare.hit(1);
+      
+      
+      if (each(beats,12+3,16)) bassdrum.hit(1);
+      if (each(beats,12+3,16)) snare.hit(0.6);
+      if (each(beats,12+3+1/3,16)) snare.hit(0.7);
+      if (each(beats,12+3+2/3,16)) snare.hit(0.8);
+      
+      break;
+      
+      
+      
+    case 6:
+      
+      if (each(beats,12+0,16)) bassdrum.hit(1);
+      
+      if (each(beats,12+0,16)) snare.hit(0.6);
+      if (each(beats,12+0+1/3,16)) snare.hit(0.7);
+      if (each(beats,12+0+2/3,16)) snare.hit(0.8);
+      if (each(beats,12+1,16)) snare.hit(0.6);
+      if (each(beats,12+1+1/3,16)) snare.hit(0.7);
+      if (each(beats,12+1+2/3,16)) snare.hit(0.8);
+      if (each(beats,12+2,16)) snare.hit(0.3);
+      if (each(beats,12+2+1/3,16)) snare.hit(0.4);
+      if (each(beats,12+2+2/3,16)) snare.hit(0.5);
+      if (each(beats,12+3,16)) snare.hit(0.6);
+      if (each(beats,12+3+1/3,16)) snare.hit(0.7);
+      if (each(beats,12+3+2/3,16)) snare.hit(0.8);
+      
+      break;
+    
+    case 7:
+      
+      
+      if (each(beats,12+0,16)) bassdrum.hit(1);
+      if (each(beats,12+1,16)) bassdrum.hit(1);
+      if (each(beats,12+2,16)) bassdrum.hit(1);
+      if (each(beats,12+2.5,16)) bassdrum.hit(1);
+      if (each(beats,12+3,16)) bassdrum.hit(1);
+      if (each(beats,12+3.5,16)) bassdrum.hit(1);
+      
+      if (each(beats,12+0.5,16)) snare.hit(0.6);
+      if (each(beats,12+1.5,16)) snare.hit(0.7);
+      
+      
+      if (each(beats,12+3.5,16)) snare.hit(0.7);
+    
+  }
+  
+  
+  //hihat.set_decay(30 - 20 * ((beats/32)%1)*((beats/32)%1));
+  
+
+
+  tally++;
+
+  var output = compress(drums.play());
+  
+  return output;
+  
+  
 }
 
 function compress(w){
-  return Math.atan(w*(Math.PI/2))/(Math.PI/2);
+  return [Math.atan(w[0]*(Math.PI/2))/(Math.PI/2), Math.atan(w[1]*(Math.PI/2))/(Math.PI/2)];
 }
 
 
@@ -74,6 +256,7 @@ function NoiseMaker(color, decay, base_amp){
   return{
     hit : function (vel) {v = vel;},
     set_color: function(c){color = c;},
+    set_decay: function(d){decay = d;},
     play : function(){
       v *= (1 - decay/sampleRate);
       
@@ -102,13 +285,13 @@ function Drumhead(freq, harmonics, decay, freq_decay, base_amp){
     hit : function (vel) {
       t = 0;
       f = freq;
-      v = vel*base_amp;
+      v = vel*base_amp*(0.8 + 0.4*Math.random());
       
     },
     play : function(){
       
       for (var i in harmonics){
-        w += Math.pow(1,i) * v * Math.cos(2 * Math.PI * f * harmonics[i] * t) / Math.pow(harmonics[i],1.5) *(2*Math.PI*f)/sampleRate * (0.5 + Math.random());
+        w += Math.pow(-1,i) * v * Math.cos(2 * Math.PI * f * harmonics[i] * t) / Math.pow(harmonics[i],1) *(2*Math.PI*f)/sampleRate;
       }
       
       w *= (1 - decay/sampleRate);
@@ -120,4 +303,57 @@ function Drumhead(freq, harmonics, decay, freq_decay, base_amp){
       return w;
     }
   };
+}
+
+  
+function Bassdrum(freq, decay, base_amp){
+  
+  var freq_decay = 5;
+  var tap_decay = 5*decay;
+  
+  var drumhead = Drumhead(freq, bass_drum_harmonics, decay, freq_decay, base_amp);
+  var drumnoise = NoiseMaker(0, tap_decay, base_amp/12);
+  
+  return{
+    
+    drumhead : drumhead,
+    
+    drumnoise : drumnoise,
+    
+    hit : function(v){
+      this.drumhead.hit(v);
+      this.drumnoise.hit(v);
+    },
+    
+    play : function(){
+      return this.drumhead.play() + this.drumnoise.play();
+    }
+    
+  };
+  
+}
+
+
+function Snaredrum(freq, decay, noise_amp, drumhead_amp){
+  
+  var drumhead = Drumhead(freq, snare_drum_harmonics, decay, 0, drumhead_amp);
+  var drumnoise = NoiseMaker(0.9, decay, noise_amp);
+  
+  
+  return{
+    
+    drumhead : drumhead,
+    drumnoise : drumnoise,
+    
+    hit : function(v){
+      this.drumhead.hit(v);
+      this.drumnoise.hit(v);
+    },
+    
+    play : function(){
+      return this.drumhead.play() + this.drumnoise.play();
+    }
+    
+  };
+  
 }
