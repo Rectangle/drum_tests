@@ -3,20 +3,20 @@
  * @name drum_tests
  */
 
-var bass_drum_harmonics = [1.0, 2.36, 1.72, 1.86, 2.72, 3.64]; // 4.5, 5.46
+var bass_drum_harmonics = [1.0, 2.36, 1.72, 1.86, 2.72, 3.64]; // , 4.5, 5.46]
 var snare_drum_harmonics = [1.0, 1.6, 2.13, 2.66, 2.3, 2.92, 3.5, 4.07]; // 4.24, 4.84
 
-var bassdrum = Bassdrum(80, 30, 1);
+var bassdrum = Bassdrum(80, 30, 2, 1);
 
 var hihat = NoiseMaker(0, 30, 0.1);
 
-var snare = Snaredrum(220, 20, 0.2, 0.4);
-var snare2 = Snaredrum(440, 50, 0.01, 0.02);
-var snare3 = Snaredrum(440, 50, 0.01, 0.02);
+var snare = Snaredrum(220, 20, 0.2, 0.8);
+var snare2 = Snaredrum(440, 50, 0.05, 0.0);
+var snare3 = Snaredrum(440, 50, 0.05, 0.1);
 
-var tom1 = Tomdrum(110, 15, 0.8);
-var tom2 = Tomdrum(110*3/2, 17, 0.8);
-var tom3 = Tomdrum(110*2, 20, 0.8);
+var tom1 = Bassdrum(82.5, 10, 0.7, 2);
+var tom2 = Bassdrum(110, 10, 0.7, 2);
+var tom3 = Bassdrum(165, 10, 0.7, 2);
 
 var drums = {
   play : function(){
@@ -84,10 +84,14 @@ export function dsp(t) {
     
     if (each(beats,2,4)) snare.hit(1);
     
-    if (each(beats,7,8)) tom2.hit(1);
+    if (each(beats,6.5,8)) bassdrum.hit(1);
     
     
-    if (each(beats,1.5,4) && Math.random() > 0.8) bassdrum.hit(0.6);
+    
+    if (each(beats,7.5,8)) snare.hit(0.6);
+    
+    
+    if (each(beats,1.5,4) && Math.random() > 0.3) bassdrum.hit(0.6);
     
     if (each(beats,0.75,4) && Math.random() > 0.8) hihat.hit(0.5);
     
@@ -335,9 +339,8 @@ function Drumhead(freq, harmonics, harmonic_power, decay, freq_decay, base_amp){
 }
 
   
-function Bassdrum(freq, decay, base_amp){
+function Bassdrum(freq, decay, freq_decay, base_amp){
   
-  var freq_decay = 5;
   var tap_decay = 5*decay;
   
   var drumhead = Drumhead(freq, bass_drum_harmonics, 0, decay, freq_decay, base_amp);
@@ -366,7 +369,7 @@ function Bassdrum(freq, decay, base_amp){
 function Snaredrum(freq, decay, noise_amp, drumhead_amp){
   
   var drumhead = Drumhead(freq, snare_drum_harmonics, 0, decay, 0, drumhead_amp);
-  var drumnoise = NoiseMaker(0.9, decay, noise_amp);
+  var drumnoise = NoiseMaker(0.95, decay, noise_amp);
   
   
   return{
@@ -375,6 +378,8 @@ function Snaredrum(freq, decay, noise_amp, drumhead_amp){
     drumnoise : drumnoise,
     
     hit : function(v){
+      
+      v *= (Math.random()*2-1) * 0.2 + 1;
       this.drumhead.hit(v);
       this.drumnoise.hit(v);
     },
